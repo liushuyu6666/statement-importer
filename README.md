@@ -7,16 +7,35 @@ Supports multiple bank/card formats via auto-detection — just drop all your PD
 ## Project Structure
 
 ```
-bank-statement/
-├── main.py              # Entry point — scans PDFs, detects format, imports to MongoDB
+statement-importer/
+├── main.py                # Entry point — scans PDFs, detects format, imports to MongoDB
 ├── parsers/
-│   ├── __init__.py      # Auto-detection registry
-│   ├── base.py          # StatementParser base class
-│   └── rbc_mastercard.py
-├── statements/          # Drop statement PDFs here
-├── .env                 # Configuration
+│   ├── __init__.py        # Auto-detection registry
+│   ├── base.py            # StatementParser ABC
+│   ├── rbc_personal.py    # Shared base for RBC personal account statements
+│   ├── rbc_mastercard.py  # RBC MasterCard credit card
+│   ├── rbc_chequing.py    # RBC Day to Day Banking chequing account
+│   └── rbc_savings.py     # RBC High Interest eSavings account
+├── statements/            # Drop statement PDFs here
+├── requirements.txt
+├── .example.env
+├── .env                   # Configuration (not tracked)
 └── .venv/
 ```
+
+### Parser hierarchy
+
+```
+StatementParser (ABC)
+├── RBCMasterCardParser          # Unique format: single Amount column, regex text parsing
+└── RBCPersonalParser            # Shared format: Withdrawals/Deposits columns, word-position parsing
+    ├── RBCChequingParser
+    └── RBCSavingsParser
+```
+
+RBC MasterCard statements have a different PDF layout from the personal account
+statements (chequing/savings), so it extends `StatementParser` directly. Chequing
+and savings share the same layout and parsing logic via `RBCPersonalParser`.
 
 ## Setup
 
@@ -61,7 +80,7 @@ Database: `personal_finance`, Collection: `transactions`
 | `transactionDate` | Date     | `2026-02-10T00:00:00.000Z`          |
 | `merchant`        | String   | `LOBLAW TORONTO EGLINTO TORONTO ON`  |
 | `amount`          | Number   | `32.75` (negative for payments)      |
-| `account`         | String   | `RBC MasterCard`                     |
+| `account`         | String   | `RBC MasterCard`, `RBC Chequing`, `RBC Savings` |
 | `createdAt`       | Date     | `2026-04-14T21:50:34.506Z`          |
 
 ## Validation
@@ -74,17 +93,16 @@ Each PDF is validated before parsing:
 
 Unrecognized or invalid PDFs are skipped with a message.
 
-## Adding a New Bank Parser
+## Adding a New Parser
+
+For a completely new statement format:
 
 1. Create `parsers/your_bank.py` extending `StatementParser`
 2. Implement `matches()`, `validate()`, and `parse()`
-3. Register it in `parsers/__init__.py`:
+3. Register it in `parsers/__init__.py`
 
-```python
-from .your_bank import YourBankParser
+For another RBC personal account type (same PDF layout as chequing/savings):
 
-PARSERS = [
-    RBCMasterCardParser,
-    YourBankParser,
-]
-```
+1. Create `parsers/rbc_your_account.py` extending `RBCPersonalParser`
+2. Define `ACCOUNT`, `_MATCH_KEYWORD`, and `_ACCOUNT_TYPE_FEATURE`
+3. Register it in `parsers/__init__.py`
