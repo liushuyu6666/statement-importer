@@ -1,7 +1,9 @@
+from .rbc_chequing import RBCChequingParser
 from .rbc_mastercard import RBCMasterCardParser
 
 PARSERS = [
     RBCMasterCardParser,
+    RBCChequingParser,
 ]
 
 
