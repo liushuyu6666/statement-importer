@@ -6,17 +6,19 @@ import pdfplumber
 from .base import StatementParser
 
 # Matches lines like: FEB 10 FEB 12 DESCRIPTION $17.69  or  -$1,000.00
+# Handles missing spaces in dates: "FEB10 FEB12" or "FEB 10 FEB 12"
 # No end-of-line anchor — page 1 has sidebar text appended to some rows.
 _TRANSACTION_RE = re.compile(
-    r"^([A-Z]{3} \d{2})\s+"  # transaction date
-    r"[A-Z]{3} \d{2}\s+"     # posting date (skipped)
-    r"(.+?)\s+"               # activity description (non-greedy)
-    r"(-?\$[\d,]+\.\d{2})"   # amount (first match)
+    r"^([A-Z]{3}\s*\d{2})\s+"   # transaction date: "JAN 10" or "JAN10"
+    r"[A-Z]{3}\s*\d{2}\s+"      # posting date (skipped)
+    r"(.+?)\s+"                  # activity description (non-greedy)
+    r"(-?\$[\d,]+\.\d{2})"      # amount (first match)
 )
 
-# Extracts the statement period year, e.g. "STATEMENT FROM FEB 11 TO MAR 10, 2026"
+# Extracts the statement period year — handles optional missing spaces.
+# e.g. "STATEMENT FROM FEB 11 TO MAR 10, 2026" or "STATEMENTFROMJAN11TOFEB12,2024"
 _STATEMENT_PERIOD_RE = re.compile(
-    r"STATEMENT FROM .+ TO .+,\s*(\d{4})"
+    r"STATEMENT\s*FROM\s*.+?TO\s*.+?,\s*(\d{4})"
 )
 
 # Structural features expected in a valid RBC MasterCard statement.
@@ -36,12 +38,17 @@ class RBCMasterCardParser(StatementParser):
 
     @staticmethod
     def matches(first_page_text: str) -> bool:
-        return "RBC" in first_page_text and "Cash Back Mastercard" in first_page_text
+        text = first_page_text.replace(" ", "").lower()
+        return "rbc" in text and "cashbackmastercard" in text
 
     @staticmethod
     def validate(full_text: str, cardholder_name: str) -> list[str]:
-        errors = [msg for feature, msg in _REQUIRED_FEATURES if feature not in full_text]
-        if cardholder_name.upper() not in full_text.upper():
+        normalized = full_text.replace(" ", "")
+        errors = [
+            msg for feature, msg in _REQUIRED_FEATURES
+            if feature.replace(" ", "") not in normalized
+        ]
+        if cardholder_name.upper().replace(" ", "") not in normalized.upper():
             errors.append(f"Cardholder name '{cardholder_name}' not found in statement")
         return errors
 
@@ -75,7 +82,9 @@ class RBCMasterCardParser(StatementParser):
 
     @staticmethod
     def _parse_date(date_str: str, year: int) -> datetime:
-        return datetime.strptime(f"{date_str} {year}", "%b %d %Y")
+        """Parse dates like 'JAN 10' or 'JAN10' (missing space)."""
+        cleaned = date_str.replace(" ", "")
+        return datetime.strptime(f"{cleaned[:3]} {cleaned[3:]} {year}", "%b %d %Y")
 
     @staticmethod
     def _parse_amount(s: str) -> float:
