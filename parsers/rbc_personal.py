@@ -157,6 +157,7 @@ class RBCPersonalParser(StatementParser):
                     "merchant": " ".join(description_parts),
                     "amount": amount,
                     "account": self.ACCOUNT,
+                    "note": "",
                 })
                 description_parts = []
 

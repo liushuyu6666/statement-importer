@@ -61,6 +61,7 @@ class RBCMasterCardParser(StatementParser):
                             "merchant": m.group(2).strip(),
                             "amount": self._parse_amount(m.group(3)),
                             "account": self.ACCOUNT,
+                            "note": "",
                         })
         return transactions
 
@@ -78,4 +79,4 @@ class RBCMasterCardParser(StatementParser):
 
     @staticmethod
     def _parse_amount(s: str) -> float:
-        return float(s.replace("$", "").replace(",", ""))
+        return -float(s.replace("$", "").replace(",", ""))

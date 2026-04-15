@@ -1,11 +1,15 @@
 from .rbc_chequing import RBCChequingParser
 from .rbc_mastercard import RBCMasterCardParser
+from .rbc_rrsp import RBCRRSPParser
 from .rbc_savings import RBCSavingsParser
+from .rbc_tfsa import RBCTFSAParser
 
 PARSERS = [
     RBCMasterCardParser,
     RBCChequingParser,
     RBCSavingsParser,
+    RBCTFSAParser,
+    RBCRRSPParser,
 ]
 
 

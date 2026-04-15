@@ -26,7 +26,7 @@ MONGO_URI = "mongodb://localhost:27017"
 DB_NAME = "personal_finance"
 COLLECTION_NAME = "transactions"
 
-UNIQUE_INDEX_FIELDS = ["transactionDate", "merchant", "amount", "account"]
+UNIQUE_INDEX_FIELDS = ["transactionDate", "merchant", "amount", "account", "note"]
 
 
 def collect_pdfs(path: Path) -> list[Path]:
