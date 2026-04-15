@@ -235,12 +235,18 @@ class BMOChequingParser(StatementParser):
 
     @staticmethod
     def _parse_date(date_str, end_date):
-        """Parse dates like 'Feb 10' using the statement end date to determine year."""
-        dt = datetime.strptime(date_str, "%b %d")
-        candidate = dt.replace(year=end_date.year)
-        if candidate > end_date:
-            candidate = candidate.replace(year=end_date.year - 1)
-        return candidate
+        """Parse dates like 'Feb 10' using the statement end date to determine year.
+
+        Parses with year included to handle leap day (Feb 29) correctly.
+        """
+        for year in (end_date.year, end_date.year - 1):
+            try:
+                candidate = datetime.strptime(f"{date_str} {year}", "%b %d %Y")
+            except ValueError:
+                continue
+            if candidate <= end_date:
+                return candidate
+        return datetime.strptime(f"{date_str} {end_date.year}", "%b %d %Y")
 
     @staticmethod
     def _parse_amount(s):

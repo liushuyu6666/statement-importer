@@ -25,6 +25,8 @@ load_dotenv()
 MONGO_URI = "mongodb://localhost:27017"
 DB_NAME = "personal_finance"
 COLLECTION_NAME = "transactions"
+DUPLICATES_COLLECTION = "duplicate_transactions"
+FILE_STATUS_COLLECTION = "file_status"
 
 UNIQUE_INDEX_FIELDS = ["transactionDate", "merchant", "amount", "account", "note"]
 
@@ -46,18 +48,36 @@ def ensure_indexes(collection):
     )
 
 
-def insert_transactions(collection, transactions: list[dict]) -> int:
-    """Insert transactions, skipping duplicates via unique index. Returns count of new inserts."""
+def insert_transactions(collection, dup_collection, transactions, file_name):
+    """Insert transactions, saving duplicates to a separate collection.
+
+    Returns (inserted_count, skipped_count).
+    """
     now = datetime.now(timezone.utc)
     inserted = 0
+    skipped = 0
     for t in transactions:
         t["createdAt"] = now
         try:
             collection.insert_one(t)
             inserted += 1
         except DuplicateKeyError:
-            continue
-    return inserted
+            dup_collection.insert_one({**t, "fileName": file_name})
+            skipped += 1
+    return inserted, skipped
+
+
+def save_file_status(collection, file_name, account, status, error=None):
+    """Record the processing result for a PDF file."""
+    doc = {
+        "fileName": file_name,
+        "account": account,
+        "status": status,
+        "processedAt": datetime.now(timezone.utc),
+    }
+    if error:
+        doc["error"] = error
+    collection.insert_one(doc)
 
 
 def main():
@@ -77,7 +97,10 @@ def main():
         sys.exit(1)
 
     client = MongoClient(MONGO_URI)
-    collection = client[DB_NAME][COLLECTION_NAME]
+    db = client[DB_NAME]
+    collection = db[COLLECTION_NAME]
+    dup_collection = db[DUPLICATES_COLLECTION]
+    status_collection = db[FILE_STATUS_COLLECTION]
     ensure_indexes(collection)
 
     total_inserted = 0
@@ -88,16 +111,25 @@ def main():
             parser = detect_parser(str(pdf_path), cardholder_name)
         except ValueError as e:
             print(f"Skipping {pdf_path.name}: {e}")
+            save_file_status(status_collection, pdf_path.name, "", "failed", str(e))
             continue
 
-        transactions = parser.parse(str(pdf_path))
-        inserted = insert_transactions(collection, transactions)
-        skipped = len(transactions) - inserted
+        try:
+            transactions = parser.parse(str(pdf_path))
+            inserted, skipped = insert_transactions(
+                collection, dup_collection, transactions, pdf_path.name
+            )
 
-        total_inserted += inserted
-        total_skipped += skipped
+            total_inserted += inserted
+            total_skipped += skipped
 
-        print(f"{pdf_path.name}: {inserted} inserted, {skipped} skipped (duplicates)")
+            print(f"{pdf_path.name}: {inserted} inserted, {skipped} skipped (duplicates)")
+            save_file_status(status_collection, pdf_path.name, parser.ACCOUNT, "done")
+        except Exception as e:
+            print(f"Error processing {pdf_path.name}: {e}")
+            save_file_status(
+                status_collection, pdf_path.name, parser.ACCOUNT, "failed", str(e)
+            )
 
     print(f"\nTotal: {total_inserted} inserted, {total_skipped} skipped across {len(pdfs)} file(s)")
 

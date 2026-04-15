@@ -194,16 +194,22 @@ class RBCPersonalParser(StatementParser):
 
     @staticmethod
     def _parse_date(date_str, start_date, end_date):
-        """Parse dates like '16Feb' using the statement period to determine year."""
+        """Parse dates like '16Feb' using the statement period to determine year.
+
+        Parses with year included to handle leap day (Feb 29) correctly.
+        """
         m = re.match(r"(\d{1,2})([A-Z][a-z]{2})", date_str)
         if not m:
             raise ValueError(f"Cannot parse date: {date_str}")
-        day_month = datetime.strptime(f"{m.group(1)} {m.group(2)}", "%d %b")
+        day_month_str = f"{m.group(1)} {m.group(2)}"
         for year in (end_date.year, start_date.year):
-            candidate = day_month.replace(year=year)
+            try:
+                candidate = datetime.strptime(f"{day_month_str} {year}", "%d %b %Y")
+            except ValueError:
+                continue
             if start_date <= candidate <= end_date:
                 return candidate
-        return day_month.replace(year=end_date.year)
+        return datetime.strptime(f"{day_month_str} {end_date.year}", "%d %b %Y")
 
     @staticmethod
     def _parse_amount(s):
