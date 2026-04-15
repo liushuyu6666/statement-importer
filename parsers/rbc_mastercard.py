@@ -16,9 +16,11 @@ _TRANSACTION_RE = re.compile(
 )
 
 # Extracts the full statement period — handles optional missing spaces.
-# e.g. "STATEMENT FROM FEB 11 TO MAR 10, 2026" or "STATEMENTFROMJAN11TOFEB12,2024"
+# Format 1: "STATEMENT FROM DEC 11 TO JAN 10, 2022" (year only at end)
+# Format 2: "STATEMENT FROM DEC 11, 2021 TO JAN 10, 2022" (year after each date)
+# Also handles merged text: "STATEMENTFROMDEC11,2021TOJAN10,2022"
 _STATEMENT_PERIOD_RE = re.compile(
-    r"STATEMENT\s*FROM\s*([A-Z]{3})\s*(\d{1,2})\s*TO\s*([A-Z]{3})\s*(\d{1,2})\s*,\s*(\d{4})"
+    r"STATEMENT\s*FROM\s*([A-Z]{3})\s*(\d{1,2})\s*(?:,\s*(\d{4}))?\s*TO\s*([A-Z]{3})\s*(\d{1,2})\s*,\s*(\d{4})"
 )
 
 _REQUIRED_FEATURES = [
@@ -82,14 +84,22 @@ class RBCMasterCardParser(StatementParser):
         m = _STATEMENT_PERIOD_RE.search(text)
         if not m:
             raise ValueError("Could not find statement period in PDF")
-        end_month, end_day, year = m.group(3), int(m.group(4)), int(m.group(5))
-        end_date = datetime.strptime(f"{end_month} {end_day} {year}", "%b %d %Y")
+        end_month, end_day, end_year = m.group(4), int(m.group(5)), int(m.group(6))
+        end_date = datetime.strptime(f"{end_month} {end_day} {end_year}", "%b %d %Y")
         start_month, start_day = m.group(1), int(m.group(2))
-        # Start month may be in the previous year (e.g. DEC 12 TO JAN 10, 2026)
-        for y in (year, year - 1):
-            start_date = datetime.strptime(f"{start_month} {start_day} {y}", "%b %d %Y")
-            if start_date <= end_date:
-                break
+        if m.group(3):
+            # Explicit start year: "DEC 11, 2021 TO JAN 10, 2022"
+            start_date = datetime.strptime(
+                f"{start_month} {start_day} {m.group(3)}", "%b %d %Y"
+            )
+        else:
+            # No start year — infer from end year (may be previous year)
+            for y in (end_year, end_year - 1):
+                start_date = datetime.strptime(
+                    f"{start_month} {start_day} {y}", "%b %d %Y"
+                )
+                if start_date <= end_date:
+                    break
         return start_date, end_date
 
     @staticmethod
