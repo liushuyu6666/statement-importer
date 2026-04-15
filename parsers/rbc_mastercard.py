@@ -21,14 +21,12 @@ _STATEMENT_PERIOD_RE = re.compile(
     r"STATEMENT\s*FROM\s*.+?TO\s*.+?,\s*(\d{4})"
 )
 
-# Structural features expected in a valid RBC MasterCard statement.
 _REQUIRED_FEATURES = [
     ("RBC", "Missing RBC branding"),
     ("Cash Back Mastercard", "Missing 'Cash Back Mastercard' header"),
     ("STATEMENT FROM", "Missing statement period header"),
-    ("PREVIOUS ACCOUNT BALANCE", "Missing previous account balance"),
-    ("TOTAL ACCOUNT BALANCE", "Missing total account balance"),
-    ("ACTIVITY DESCRIPTION", "Missing transaction table header"),
+    ("TRANSACTION", "Missing transaction column header"),
+    ("ACTIVITY DESCRIPTION", "Missing activity description column header"),
     ("AMOUNT ($)", "Missing amount column header"),
 ]
 
