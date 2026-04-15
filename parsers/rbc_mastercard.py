@@ -15,10 +15,10 @@ _TRANSACTION_RE = re.compile(
     r"(-?\$[\d,]+\.\d{2})"      # amount (first match)
 )
 
-# Extracts the statement period year — handles optional missing spaces.
+# Extracts the full statement period — handles optional missing spaces.
 # e.g. "STATEMENT FROM FEB 11 TO MAR 10, 2026" or "STATEMENTFROMJAN11TOFEB12,2024"
 _STATEMENT_PERIOD_RE = re.compile(
-    r"STATEMENT\s*FROM\s*.+?TO\s*.+?,\s*(\d{4})"
+    r"STATEMENT\s*FROM\s*([A-Z]{3})\s*(\d{1,2})\s*TO\s*([A-Z]{3})\s*(\d{1,2})\s*,\s*(\d{4})"
 )
 
 _REQUIRED_FEATURES = [
@@ -50,10 +50,16 @@ class RBCMasterCardParser(StatementParser):
             errors.append(f"Cardholder name '{cardholder_name}' not found in statement")
         return errors
 
+    def get_period(self, pdf_path: str) -> str:
+        with pdfplumber.open(pdf_path) as pdf:
+            start, end = self._extract_period(pdf)
+        return f"{start.strftime('%Y-%m-%d')} to {end.strftime('%Y-%m-%d')}"
+
     def parse(self, pdf_path: str) -> list[dict]:
         transactions = []
         with pdfplumber.open(pdf_path) as pdf:
-            year = self._extract_year(pdf)
+            _, end_date = self._extract_period(pdf)
+            year = end_date.year
             for page in pdf.pages:
                 text = page.extract_text()
                 if not text:
@@ -71,12 +77,20 @@ class RBCMasterCardParser(StatementParser):
         return transactions
 
     @staticmethod
-    def _extract_year(pdf) -> int:
+    def _extract_period(pdf) -> tuple[datetime, datetime]:
         text = pdf.pages[0].extract_text()
         m = _STATEMENT_PERIOD_RE.search(text)
-        if m:
-            return int(m.group(1))
-        raise ValueError("Could not find statement year in PDF")
+        if not m:
+            raise ValueError("Could not find statement period in PDF")
+        end_month, end_day, year = m.group(3), int(m.group(4)), int(m.group(5))
+        end_date = datetime.strptime(f"{end_month} {end_day} {year}", "%b %d %Y")
+        start_month, start_day = m.group(1), int(m.group(2))
+        # Start month may be in the previous year (e.g. DEC 12 TO JAN 10, 2026)
+        for y in (year, year - 1):
+            start_date = datetime.strptime(f"{start_month} {start_day} {y}", "%b %d %Y")
+            if start_date <= end_date:
+                break
+        return start_date, end_date
 
     @staticmethod
     def _parse_date(date_str: str, year: int) -> datetime:

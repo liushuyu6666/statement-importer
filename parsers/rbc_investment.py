@@ -22,6 +22,12 @@ import pdfplumber
 
 from .base import StatementParser
 
+# e.g. "October 1, 2024 to December 31, 2024"
+_PERIOD_RE = re.compile(
+    r"([A-Z][a-z]+)\s*(\d{1,2})\s*,\s*(\d{4})\s*to\s*"
+    r"([A-Z][a-z]+)\s*(\d{1,2})\s*,\s*(\d{4})"
+)
+
 _BASE_FEATURES = [
     ("Your investment activity", "Missing investment activity section"),
 ]
@@ -79,6 +85,20 @@ class RBCInvestmentParser(StatementParser):
         if cardholder_name.upper().replace(" ", "") not in normalized.upper():
             errors.append(f"Cardholder name '{cardholder_name}' not found in statement")
         return errors
+
+    def get_period(self, pdf_path: str) -> str:
+        with pdfplumber.open(pdf_path) as pdf:
+            text = pdf.pages[0].extract_text() or ""
+        m = _PERIOD_RE.search(text)
+        if not m:
+            raise ValueError("Could not find statement period in PDF")
+        start = datetime.strptime(
+            f"{m.group(1)} {m.group(2)}, {m.group(3)}", "%B %d, %Y"
+        )
+        end = datetime.strptime(
+            f"{m.group(4)} {m.group(5)}, {m.group(6)}", "%B %d, %Y"
+        )
+        return f"{start.strftime('%Y-%m-%d')} to {end.strftime('%Y-%m-%d')}"
 
     def parse(self, pdf_path: str) -> list[dict]:
         transactions = []

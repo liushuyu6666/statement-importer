@@ -20,6 +20,14 @@ class StatementParser(ABC):
         """
 
     @abstractmethod
+    def get_period(self, pdf_path: str) -> str:
+        """Return a string identifying the statement period.
+
+        Used for deduplication — if (account, period) already exists in
+        file_status with status "done", the file is skipped.
+        """
+
+    @abstractmethod
     def parse(self, pdf_path: str) -> list[dict]:
         """Parse the PDF and return a list of transaction dicts.
 

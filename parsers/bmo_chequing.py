@@ -66,6 +66,11 @@ class BMOChequingParser(StatementParser):
             errors.append(f"Cardholder name '{cardholder_name}' not found in statement")
         return errors
 
+    def get_period(self, pdf_path: str) -> str:
+        with pdfplumber.open(pdf_path) as pdf:
+            end_date = self._extract_end_date(pdf)
+        return f"ending {end_date.strftime('%Y-%m-%d')}"
+
     def parse(self, pdf_path: str) -> list[dict]:
         transactions = []
         with pdfplumber.open(pdf_path) as pdf:

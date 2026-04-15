@@ -69,6 +69,11 @@ class RBCPersonalParser(StatementParser):
             errors.append(f"Cardholder name '{cardholder_name}' not found in statement")
         return errors
 
+    def get_period(self, pdf_path: str) -> str:
+        with pdfplumber.open(pdf_path) as pdf:
+            start, end = self._extract_period(pdf)
+        return f"{start.strftime('%Y-%m-%d')} to {end.strftime('%Y-%m-%d')}"
+
     def parse(self, pdf_path: str) -> list[dict]:
         transactions = []
         with pdfplumber.open(pdf_path) as pdf:
