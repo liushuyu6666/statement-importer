@@ -162,6 +162,7 @@ class RBCPersonalParser(StatementParser):
                     "merchant": " ".join(description_parts),
                     "amount": amount,
                     "account": self.ACCOUNT,
+                    "type": "withdrawal" if withdrawal else "deposit",
                     "note": "",
                 })
                 description_parts = []

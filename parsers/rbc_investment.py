@@ -138,7 +138,8 @@ class RBCInvestmentParser(StatementParser):
                             "merchant": current_fund,
                             "amount": self._parse_amount(txn_match.group(3)),
                             "account": self.ACCOUNT,
-                            "note": raw_type,
+                            "type": raw_type.lower(),
+                            "note": "",
                         })
 
         return transactions

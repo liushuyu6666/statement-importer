@@ -1,12 +1,13 @@
-"""Extract transactions from bank statement PDFs into MongoDB.
+"""Extract transactions from bank statements (PDF or CSV) into MongoDB.
 
 Automatically detects the statement format and uses the appropriate parser.
 To add a new bank/card format, create a parser in parsers/ and register it
 in parsers/__init__.py.
 
 Usage:
-    python extract_transactions.py <statements_folder>
-    python extract_transactions.py <single_statement.pdf>
+    python main.py <statements_folder>
+    python main.py <single_statement.pdf>
+    python main.py <single_statement.csv>
 """
 
 import os
@@ -27,12 +28,18 @@ COLLECTION_NAME = "transactions"
 FILE_STATUS_COLLECTION = "file_status"
 
 
-def collect_pdfs(path: Path) -> list[Path]:
-    """Return a list of PDF files from a file path or directory."""
-    if path.is_file() and path.suffix.lower() == ".pdf":
+_SUPPORTED_EXTENSIONS = {".pdf", ".csv"}
+
+
+def collect_statements(path: Path) -> list[Path]:
+    """Return a list of statement files (PDF or CSV) from a path or directory."""
+    if path.is_file() and path.suffix.lower() in _SUPPORTED_EXTENSIONS:
         return [path]
     if path.is_dir():
-        return sorted(path.glob("*.pdf"))
+        return sorted(
+            p for p in path.iterdir()
+            if p.suffix.lower() in _SUPPORTED_EXTENSIONS
+        )
     return []
 
 
@@ -103,9 +110,9 @@ def main():
         sys.exit(1)
 
     target = Path(sys.argv[1])
-    pdfs = collect_pdfs(target)
-    if not pdfs:
-        print(f"No PDF files found at: {target}")
+    statements = collect_statements(target)
+    if not statements:
+        print(f"No statement files found at: {target}")
         sys.exit(1)
 
     client = MongoClient(MONGO_URI)
@@ -118,7 +125,7 @@ def main():
     total_inserted = 0
     total_skipped = 0
 
-    for pdf_path in pdfs:
+    for pdf_path in statements:
         try:
             parser = detect_parser(str(pdf_path), cardholder_name)
             period = parser.get_period(str(pdf_path))
@@ -148,7 +155,7 @@ def main():
                 status_collection, pdf_path.name, parser.ACCOUNT, period, "failed", str(e)
             )
 
-    print(f"\nTotal: {total_inserted} inserted, {total_skipped} skipped across {len(pdfs)} file(s)")
+    print(f"\nTotal: {total_inserted} inserted, {total_skipped} skipped across {len(statements)} file(s)")
 
     client.close()
 

@@ -69,11 +69,13 @@ class RBCMasterCardParser(StatementParser):
                 for line in text.split("\n"):
                     m = _TRANSACTION_RE.match(line.strip())
                     if m:
+                        amount = self._parse_amount(m.group(3))
                         transactions.append({
                             "transactionDate": self._parse_date(m.group(1), year),
                             "merchant": m.group(2).strip(),
-                            "amount": self._parse_amount(m.group(3)),
+                            "amount": amount,
                             "account": self.ACCOUNT,
+                            "type": "payment" if amount > 0 else "purchase",
                             "note": "",
                         })
         return transactions

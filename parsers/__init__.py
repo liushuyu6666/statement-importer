@@ -4,8 +4,9 @@ from .rbc_mastercard import RBCMasterCardParser
 from .rbc_rrsp import RBCRRSPParser
 from .rbc_savings import RBCSavingsParser
 from .rbc_tfsa import RBCTFSAParser
+from .ws import WealthSimpleParser
 
-PARSERS = [
+PDF_PARSERS = [
     BMOChequingParser,
     RBCMasterCardParser,
     RBCChequingParser,
@@ -15,12 +16,18 @@ PARSERS = [
 ]
 
 
-def detect_parser(pdf_path: str, cardholder_name: str):
+def detect_parser(file_path: str, cardholder_name: str):
     """Detect the statement format, validate structure, and return a parser.
 
-    Reads the PDF once, matches against known formats, then validates
-    that the PDF has the expected structural features before returning.
+    Routes PDF files through pdfplumber-based detection and CSV files
+    through header-based detection.
     """
+    if file_path.lower().endswith(".csv"):
+        return _detect_csv_parser(file_path)
+    return _detect_pdf_parser(file_path, cardholder_name)
+
+
+def _detect_pdf_parser(pdf_path: str, cardholder_name: str):
     import pdfplumber
 
     with pdfplumber.open(pdf_path) as pdf:
@@ -29,7 +36,7 @@ def detect_parser(pdf_path: str, cardholder_name: str):
             page.extract_text() or "" for page in pdf.pages
         )
 
-    for parser_cls in PARSERS:
+    for parser_cls in PDF_PARSERS:
         if parser_cls.matches(first_page_text):
             errors = parser_cls.validate(full_text, cardholder_name)
             if errors:
@@ -41,5 +48,16 @@ def detect_parser(pdf_path: str, cardholder_name: str):
 
     raise ValueError(
         f"No parser recognized this statement. "
-        f"Supported formats: {', '.join(p.ACCOUNT for p in PARSERS)}"
+        f"Supported formats: {', '.join(p.ACCOUNT for p in PDF_PARSERS)}"
     )
+
+
+def _detect_csv_parser(file_path: str):
+    with open(file_path) as f:
+        first_line = f.readline()
+
+    if WealthSimpleParser.matches(first_line):
+        account_type = WealthSimpleParser.extract_account_type(file_path)
+        return WealthSimpleParser(account_type)
+
+    raise ValueError("No CSV parser recognized this statement.")

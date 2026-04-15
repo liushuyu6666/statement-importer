@@ -142,6 +142,7 @@ class BMOChequingParser(StatementParser):
         current_date_str = None
         description_parts = []
         pending_amount = None
+        pending_type = None
 
         for line in lines:
             left_words = []
@@ -183,11 +184,13 @@ class BMOChequingParser(StatementParser):
                         "merchant": " ".join(description_parts),
                         "amount": pending_amount,
                         "account": self.ACCOUNT,
+                        "type": pending_type,
                         "note": "",
                     })
                 description_parts = []
                 current_date_str = date_str
                 pending_amount = None
+                pending_type = None
 
             desc = " ".join(desc_words)
 
@@ -209,6 +212,7 @@ class BMOChequingParser(StatementParser):
                     if deducted
                     else self._parse_amount(added)
                 )
+                pending_type = "withdrawal" if deducted else "deposit"
 
         # Finalize last pending transaction on the page
         if pending_amount is not None and current_date_str and description_parts:
@@ -219,6 +223,7 @@ class BMOChequingParser(StatementParser):
                 "merchant": " ".join(description_parts),
                 "amount": pending_amount,
                 "account": self.ACCOUNT,
+                "type": pending_type,
                 "note": "",
             })
 
