@@ -146,9 +146,10 @@ Database: `personal_finance`
 
 #### RBC Savings
 
-| Type      | Meaning                            |
-|-----------|------------------------------------|
-| `deposit` | Incoming funds (interest, transfer)|
+| Type         | Meaning                              |
+|--------------|--------------------------------------|
+| `deposit`    | Incoming funds (interest, transfer)  |
+| `withdrawal` | Outgoing funds (bill pay, transfer)  |
 
 #### RBC TFSA
 
