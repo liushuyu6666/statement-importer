@@ -20,6 +20,7 @@ statement-importer/
 │   ├── rbc_investment.py  # Shared base for RBC investment account statements
 │   ├── rbc_tfsa.py        # RBC TFSA
 │   ├── rbc_rrsp.py        # RBC RRSP
+│   ├── ws_common.py       # Shared WealthSimple account name helper
 │   ├── ws.py              # WealthSimple CSV statements
 │   └── ws_pdf.py          # WealthSimple PDF statements (ShareOwner format)
 ├── statements/            # Drop statement PDFs/CSVs here
@@ -50,8 +51,10 @@ RBC chequing and savings share the same layout via `RBCPersonalParser`. RBC TFSA
 and RRSP share a different investment statement layout via `RBCInvestmentParser`.
 WealthSimple provides both CSV and PDF statements — the CSV parser detects by
 header row and the PDF parser detects by "ORDER EXECUTION ONLY ACCOUNT" header.
-Both use dynamic account names (e.g., `WS Cash`, `WS Crypto`) extracted from the
-file.
+Both extract the account number from the file and look up a human-readable
+source label via `WS_ACCOUNT_<AccountNo>` env vars (see `.example.env`),
+producing names like `WS Cash-XXXXXXXXXXXX`. Unmapped accounts fall back
+to `WS <AccountNo>`.
 
 ## Setup
 
@@ -67,10 +70,14 @@ Copy the example env file and fill in your name:
 cp .example.env .env
 ```
 
-Then edit `.env` with your name:
+Then edit `.env` with your name and WealthSimple account mappings:
 
 ```
 CARDHOLDER_NAME=YOUR NAME
+
+# WealthSimple account mappings (optional)
+WS_ACCOUNT_XXXXXXXXXXXX=Crypto
+WS_ACCOUNT_YYYYYYYYYYYY=Cash
 ```
 
 Requires MongoDB running locally on the default port (27017).
@@ -99,7 +106,7 @@ Database: `personal_finance`
 | `transactionDate` | Date     | `2026-02-10T00:00:00.000Z`          |
 | `merchant`        | String   | `LOBLAW TORONTO EGLINTO TORONTO ON`  |
 | `amount`          | Number   | `32.75` (negative for payments)      |
-| `account`         | String   | `RBC MasterCard`, `BMO Chequing`, `WS Cash` |
+| `account`         | String   | `RBC MasterCard`, `BMO Chequing`, `WS Cash-XXXXXXXXXXXX` |
 | `type`            | String   | `purchase`, `deposit`, `buy`, `cont` |
 | `note`            | String   | Additional details (may be empty)    |
 | `createdAt`       | Date     | `2026-04-14T21:50:34.506Z`          |

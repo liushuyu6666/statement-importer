@@ -35,6 +35,7 @@ from pathlib import Path
 import pdfplumber
 
 from .base import StatementParser
+from .ws_common import ws_account_name
 
 # e.g. "HQ18N6512CAD_person-007oTlvcyUj5_2021-12_v_0.pdf"
 _FILENAME_RE = re.compile(r"^.+_(\d{4}-\d{2})_v_\d+\.pdf$")
@@ -42,8 +43,8 @@ _FILENAME_RE = re.compile(r"^.+_(\d{4}-\d{2})_v_\d+\.pdf$")
 # Statement period in PDF text: "2021-12-01 - 2021-12-31"
 _PERIOD_TEXT_RE = re.compile(r"(\d{4}-\d{2}-\d{2})\s*-\s*(\d{4}-\d{2}-\d{2})")
 
-# Account type section header: "Cash Account", "TFSA Account", etc.
-_ACCOUNT_TYPE_RE = re.compile(r"^([\w][\w ]*?)\s+Account\s*$", re.MULTILINE)
+# Account No. value on the line after the "Account No." header
+_ACCOUNT_NO_RE = re.compile(r"Account\s+No\..*\n(\S+)")
 
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _AMOUNT_RE = re.compile(r"^\$?[\d,]+\.\d{2}$")
@@ -51,8 +52,8 @@ _AMOUNT_RE = re.compile(r"^\$?[\d,]+\.\d{2}$")
 
 class WealthSimplePDFParser(StatementParser):
 
-    def __init__(self, account_type: str):
-        self.ACCOUNT = f"WS {account_type}"
+    def __init__(self, account_no: str):
+        self.ACCOUNT = ws_account_name(account_no)
 
     @staticmethod
     def matches(first_page_text: str) -> bool:
@@ -68,10 +69,10 @@ class WealthSimplePDFParser(StatementParser):
         return errors
 
     @staticmethod
-    def extract_account_type(first_page_text: str) -> str:
-        m = _ACCOUNT_TYPE_RE.search(first_page_text)
+    def extract_account_no(first_page_text: str) -> str:
+        m = _ACCOUNT_NO_RE.search(first_page_text)
         if not m:
-            raise ValueError("Cannot extract account type from WS PDF")
+            raise ValueError("Cannot extract Account No. from WS PDF")
         return m.group(1)
 
     def get_period(self, file_path: str) -> str:

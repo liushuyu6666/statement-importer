@@ -29,10 +29,11 @@ from datetime import datetime
 from pathlib import Path
 
 from .base import StatementParser
+from .ws_common import ws_account_name
 
 # e.g. "Non-registered-monthly-statement-transactions-HQ0JF1Q08CAD-2026-03-01.csv"
 _FILENAME_RE = re.compile(
-    r"^(.+?)-monthly-statement-transactions-\w+-(\d{4}-\d{2}-\d{2})\.csv$"
+    r"^.+?-monthly-statement-transactions-(\w+)-(\d{4}-\d{2}-\d{2})\.csv$"
 )
 
 _WS_HEADERS = {"date", "transaction", "description", "amount", "balance", "currency"}
@@ -40,8 +41,8 @@ _WS_HEADERS = {"date", "transaction", "description", "amount", "balance", "curre
 
 class WealthSimpleParser(StatementParser):
 
-    def __init__(self, account_type: str):
-        self.ACCOUNT = f"WS {account_type}"
+    def __init__(self, account_no: str):
+        self.ACCOUNT = ws_account_name(account_no)
 
     @staticmethod
     def matches(first_line: str) -> bool:
@@ -53,13 +54,13 @@ class WealthSimpleParser(StatementParser):
         return []
 
     @staticmethod
-    def extract_account_type(file_path: str) -> str:
+    def extract_account_no(file_path: str) -> str:
         m = _FILENAME_RE.match(Path(file_path).name)
         if not m:
             raise ValueError(
-                f"Cannot extract account type from filename: {Path(file_path).name}"
+                f"Cannot extract account no from filename: {Path(file_path).name}"
             )
-        return m.group(1).replace("-", " ")
+        return m.group(1)
 
     def get_period(self, file_path: str) -> str:
         m = _FILENAME_RE.match(Path(file_path).name)
