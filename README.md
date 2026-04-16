@@ -139,8 +139,10 @@ Database: `personal_finance`
 
 | Type               | Meaning                                                       |
 |--------------------|---------------------------------------------------------------|
+| `contribution`     | Cash deposited into the registered account                    |
 | `incomereinvested` | Dividend or interest automatically reinvested                 |
 | `investmentswitch` | Funds moved between investment options within the account     |
+| `returnofcapital`  | Non-taxable return of capital distribution                    |
 
 #### RBC Savings
 
