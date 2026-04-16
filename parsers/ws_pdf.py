@@ -119,7 +119,7 @@ class WealthSimplePDFParser(StatementParser):
                 cols["txn_x0"] = w["x0"]
             elif text == "Description":
                 cols["desc_x0"] = w["x0"]
-            elif text == "Charged":
+            elif text in ("Charged", "Debit"):
                 cols["charged_x0"] = w["x0"]
             elif text == "Credit" and w["x0"] > 300:
                 cols["credit_x0"] = w["x0"]

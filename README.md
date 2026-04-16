@@ -119,11 +119,11 @@ Database: `personal_finance`
 | Parser                        | Possible values                                                   |
 |-------------------------------|-------------------------------------------------------------------|
 | RBC MasterCard                | `purchase`, `payment`                                             |
-| RBC Chequing / Savings        | `withdrawal`, `deposit`                                           |
-| BMO Chequing                  | `withdrawal`, `deposit`                                           |
-| RBC TFSA / RRSP               | `contribution`, `investment switch`, `income reinvested`, `return of capital` |
-| WealthSimple CSV / Investment PDF | Transaction codes lowercased: `buy`, `sell`, `cont`, `wd`, `div`, `dep`, `fee`, `int`, `trfin`, `trfout`, etc. (full list on page 3 of each WS PDF) |
-| WealthSimple Chequing PDF     | `withdrawal`, `deposit`                                           |
+| RBC Chequing / Savings        | `deposit`, `withdrawal`                                           |
+| BMO Chequing                  | `deposit`, `withdrawal`                                           |
+| RBC TFSA / RRSP               | `contribution`, `incomereinvested`, `investmentswitch`, `returnofcapital` |
+| WealthSimple CSV / Investment PDF | `buy`, `sell`, `cont`, `wd`, `div`, `dep`, `nrt`, `roc`, `cashback`, `stkreorg`, `trfin`, `trfout`, `trfintf`, etc. |
+| WealthSimple Chequing PDF     | `deposit`, `withdrawal`                                           |
 
 ### `file_status` collection
 
