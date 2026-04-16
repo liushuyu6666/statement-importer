@@ -114,20 +114,6 @@ Database: `personal_finance`
 
 ### `type` values by account
 
-#### RBC MasterCard
-
-| Type       | Meaning                          |
-|------------|----------------------------------|
-| `purchase` | Credit card purchase             |
-| `payment`  | Payment toward the card balance  |
-
-#### RBC Chequing / Savings
-
-| Type         | Meaning                              |
-|--------------|--------------------------------------|
-| `deposit`    | Incoming funds (payroll, transfer)   |
-| `withdrawal` | Outgoing funds (bill pay, transfer)  |
-
 #### BMO Chequing
 
 | Type         | Meaning                              |
@@ -135,39 +121,82 @@ Database: `personal_finance`
 | `deposit`    | Incoming funds (payroll, transfer)   |
 | `withdrawal` | Outgoing funds (bill pay, transfer)  |
 
-#### RBC TFSA / RRSP
+#### RBC Chequing
 
-| Type               | Meaning                                              |
-|--------------------|------------------------------------------------------|
-| `contribution`     | Cash deposited into the registered account           |
-| `incomereinvested` | Dividend or interest automatically reinvested        |
-| `investmentswitch` | Funds moved between investment options within the account |
-| `returnofcapital`  | Non-taxable return of capital distribution           |
+| Type         | Meaning                              |
+|--------------|--------------------------------------|
+| `deposit`    | Incoming funds (payroll, transfer)   |
+| `withdrawal` | Outgoing funds (bill pay, transfer)  |
 
-#### WealthSimple CSV / Investment PDF
+#### RBC MasterCard
 
-| Type       | Meaning                                              |
-|------------|------------------------------------------------------|
-| `buy`      | Stock or ETF purchase                                |
-| `sell`     | Stock or ETF sale                                    |
-| `cont`     | Contribution — cash deposited into the account       |
-| `wd`       | Withdrawal — cash removed from the account           |
-| `dep`      | Deposit                                              |
-| `div`      | Dividend distribution                                |
-| `nrt`      | Non-resident tax withholding                         |
-| `roc`      | Return of capital distribution                       |
-| `cashback` | Cash-back reward                                     |
-| `stkreorg` | Stock reorganization (split, merger, restructuring)  |
-| `trfin`    | Transfer in from another account                     |
-| `trfout`   | Transfer out to another account                      |
-| `trfintf`  | Internal transfer between sub-accounts               |
+| Type       | Meaning                          |
+|------------|----------------------------------|
+| `purchase` | Credit card purchase             |
+| `payment`  | Payment toward the card balance  |
 
-#### WealthSimple Chequing PDF
+#### RBC RRSP
+
+| Type               | Meaning                                                       |
+|--------------------|---------------------------------------------------------------|
+| `incomereinvested` | Dividend or interest automatically reinvested                 |
+| `investmentswitch` | Funds moved between investment options within the account     |
+
+#### RBC Savings
+
+| Type      | Meaning                            |
+|-----------|------------------------------------|
+| `deposit` | Incoming funds (interest, transfer)|
+
+#### RBC TFSA
+
+| Type               | Meaning                                                       |
+|--------------------|---------------------------------------------------------------|
+| `contribution`     | Cash deposited into the registered account                    |
+| `incomereinvested` | Dividend or interest automatically reinvested                 |
+| `investmentswitch` | Funds moved between investment options within the account     |
+
+#### WS Chequing
 
 | Type         | Meaning                                          |
 |--------------|--------------------------------------------------|
 | `deposit`    | Incoming funds                                   |
 | `withdrawal` | Outgoing funds (purchases, transfers)            |
+
+#### WS Crypto
+
+| Type      | Meaning                                        |
+|-----------|------------------------------------------------|
+| `cont`    | Contribution — cash deposited into the account |
+| `sell`    | Crypto sale                                    |
+| `trfintf` | Internal transfer between sub-accounts         |
+| `wd`      | Withdrawal — cash removed from the account     |
+
+#### WS FHSA
+
+| Type       | Meaning                                             |
+|------------|-----------------------------------------------------|
+| `buy`      | Stock or ETF purchase                               |
+| `cont`     | Contribution — cash deposited into the account      |
+| `div`      | Dividend distribution                               |
+| `nrt`      | Non-resident tax withholding                        |
+| `sell`     | Stock or ETF sale                                   |
+| `stkreorg` | Stock reorganization (split, merger, restructuring) |
+
+#### WS Non-registered
+
+| Type       | Meaning                                              |
+|------------|------------------------------------------------------|
+| `buy`      | Stock or ETF purchase                                |
+| `cashback` | Cash-back reward                                     |
+| `cont`     | Contribution — cash deposited into the account       |
+| `div`      | Dividend distribution                                |
+| `nrt`      | Non-resident tax withholding                         |
+| `roc`      | Return of capital distribution                       |
+| `sell`     | Stock or ETF sale                                    |
+| `trfin`    | Transfer in from another account                     |
+| `trfout`   | Transfer out to another account                      |
+| `wd`       | Withdrawal — cash removed from the account           |
 
 ## `file_status` collection
 
