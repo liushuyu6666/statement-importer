@@ -5,6 +5,7 @@ from .rbc_rrsp import RBCRRSPParser
 from .rbc_savings import RBCSavingsParser
 from .rbc_tfsa import RBCTFSAParser
 from .ws import WealthSimpleParser
+from .ws_pdf import WealthSimplePDFParser
 
 PDF_PARSERS = [
     BMOChequingParser,
@@ -45,6 +46,17 @@ def _detect_pdf_parser(pdf_path: str, cardholder_name: str):
                     + "\n".join(f"  - {e}" for e in errors)
                 )
             return parser_cls()
+
+    # WealthSimple PDF needs dynamic account type (like the CSV parser)
+    if WealthSimplePDFParser.matches(first_page_text):
+        errors = WealthSimplePDFParser.validate(full_text, cardholder_name)
+        if errors:
+            raise ValueError(
+                f"PDF matched WealthSimple but failed validation:\n"
+                + "\n".join(f"  - {e}" for e in errors)
+            )
+        account_type = WealthSimplePDFParser.extract_account_type(first_page_text)
+        return WealthSimplePDFParser(account_type)
 
     raise ValueError(
         f"No parser recognized this statement. "
