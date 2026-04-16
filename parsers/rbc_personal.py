@@ -7,10 +7,16 @@ them, so we use word-level extraction with x-position column classification.
 Parser hierarchy:
 
     StatementParser (ABC)                   — base.py
+    ├── BMOChequingParser                   — bmo_chequing.py
     ├── RBCMasterCardParser                 — rbc_mastercard.py
-    └── RBCPersonalParser                   — rbc_personal.py (this file)
-        ├── RBCChequingParser               — rbc_chequing.py
-        └── RBCSavingsParser                — rbc_savings.py
+    ├── RBCPersonalParser                   — rbc_personal.py (this file)
+    │   ├── RBCChequingParser               — rbc_chequing.py
+    │   └── RBCSavingsParser                — rbc_savings.py
+    ├── RBCInvestmentParser                 — rbc_investment.py
+    │   ├── RBCTFSAParser                   — rbc_tfsa.py
+    │   └── RBCRRSPParser                   — rbc_rrsp.py
+    ├── WealthSimpleParser                  — ws.py
+    └── WealthSimplePDFParser               — ws_pdf.py
 """
 
 import re

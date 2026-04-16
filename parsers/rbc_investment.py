@@ -6,13 +6,16 @@ the same PDF layout with fund-level transaction activity.
 Parser hierarchy:
 
     StatementParser (ABC)                   — base.py
+    ├── BMOChequingParser                   — bmo_chequing.py
     ├── RBCMasterCardParser                 — rbc_mastercard.py
     ├── RBCPersonalParser                   — rbc_personal.py
     │   ├── RBCChequingParser               — rbc_chequing.py
     │   └── RBCSavingsParser                — rbc_savings.py
-    └── RBCInvestmentParser                 — rbc_investment.py (this file)
-        ├── RBCTFSAParser                   — rbc_tfsa.py
-        └── RBCRRSPParser                   — rbc_rrsp.py
+    ├── RBCInvestmentParser                 — rbc_investment.py (this file)
+    │   ├── RBCTFSAParser                   — rbc_tfsa.py
+    │   └── RBCRRSPParser                   — rbc_rrsp.py
+    ├── WealthSimpleParser                  — ws.py
+    └── WealthSimplePDFParser               — ws_pdf.py
 """
 
 import re
