@@ -126,6 +126,12 @@ def main():
     total_skipped = 0
 
     for pdf_path in statements:
+        if pdf_path.stat().st_size == 0:
+            print(f"Skipping {pdf_path.name}: empty file")
+            save_file_status(status_collection, pdf_path.name, "", "", "skipped", "empty file")
+            total_skipped += 1
+            continue
+
         try:
             parser = detect_parser(str(pdf_path), cardholder_name)
             period = parser.get_period(str(pdf_path))
