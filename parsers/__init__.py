@@ -68,8 +68,8 @@ def _detect_pdf_parser(pdf_path: str, cardholder_name: str):
                 f"PDF matched WealthSimple but failed validation:\n"
                 + "\n".join(f"  - {e}" for e in errors)
             )
-        account_no = WealthSimplePDFParser.extract_account_no(first_page_text)
-        return WealthSimplePDFParser(account_no)
+        account_id = WealthSimplePDFParser.extract_account_id(pdf_path)
+        return WealthSimplePDFParser(account_id)
 
     raise ValueError(
         f"No parser recognized this statement. "

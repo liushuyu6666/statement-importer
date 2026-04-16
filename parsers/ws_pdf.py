@@ -38,13 +38,10 @@ from .base import StatementParser
 from .ws_common import ws_account_name
 
 # e.g. "HQ18N6512CAD_person-007oTlvcyUj5_2021-12_v_0.pdf"
-_FILENAME_RE = re.compile(r"^.+_(\d{4}-\d{2})_v_\d+\.pdf$")
+_FILENAME_RE = re.compile(r"^([A-Z0-9]+)_.+_(\d{4}-\d{2})_v_\d+\.pdf$")
 
 # Statement period in PDF text: "2021-12-01 - 2021-12-31"
 _PERIOD_TEXT_RE = re.compile(r"(\d{4}-\d{2}-\d{2})\s*-\s*(\d{4}-\d{2}-\d{2})")
-
-# Account No. value on the line after the "Account No." header
-_ACCOUNT_NO_RE = re.compile(r"Account\s+No\..*\n(\S+)")
 
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _AMOUNT_RE = re.compile(r"^\$?[\d,]+\.\d{2}$")
@@ -69,16 +66,18 @@ class WealthSimplePDFParser(StatementParser):
         return errors
 
     @staticmethod
-    def extract_account_no(first_page_text: str) -> str:
-        m = _ACCOUNT_NO_RE.search(first_page_text)
+    def extract_account_id(file_path: str) -> str:
+        m = _FILENAME_RE.match(Path(file_path).name)
         if not m:
-            raise ValueError("Cannot extract Account No. from WS PDF")
+            raise ValueError(
+                f"Cannot extract account ID from filename: {Path(file_path).name}"
+            )
         return m.group(1)
 
     def get_period(self, file_path: str) -> str:
         m = _FILENAME_RE.match(Path(file_path).name)
         if m:
-            return m.group(1)
+            return m.group(2)
         with pdfplumber.open(file_path) as pdf:
             text = pdf.pages[0].extract_text() or ""
         m = _PERIOD_TEXT_RE.search(text)

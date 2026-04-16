@@ -61,7 +61,8 @@ class WealthSimpleChequingPDFParser(StatementParser):
     @staticmethod
     def matches(first_page_text: str) -> bool:
         text = first_page_text.replace(" ", "").lower()
-        return "chequingmonthlystatement" in text
+        return ("chequingmonthlystatement" in text
+                or "cashmonthlystatement" in text)
 
     @staticmethod
     def validate(full_text: str, cardholder_name: str) -> list[str]:
@@ -82,9 +83,7 @@ class WealthSimpleChequingPDFParser(StatementParser):
     @staticmethod
     def extract_pdf_account_no(first_page_text: str) -> str:
         m = _ACCOUNT_NO_RE.search(first_page_text)
-        if not m:
-            raise ValueError("Cannot extract Account number from WS Chequing PDF")
-        return m.group(1)
+        return m.group(1) if m else ""
 
     def get_period(self, file_path: str) -> str:
         m = _FILENAME_RE.match(Path(file_path).name)

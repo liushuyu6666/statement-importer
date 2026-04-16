@@ -22,7 +22,8 @@ statement-importer/
 │   ├── rbc_rrsp.py        # RBC RRSP
 │   ├── ws_common.py       # Shared WealthSimple account name helper
 │   ├── ws.py              # WealthSimple CSV statements
-│   └── ws_pdf.py          # WealthSimple PDF statements (ShareOwner format)
+│   ├── ws_pdf.py          # WealthSimple PDF statements (ShareOwner investment format)
+│   └── ws_chequing_pdf.py # WealthSimple PDF statements (Cash/Chequing format)
 ├── statements/            # Drop statement PDFs/CSVs here
 ├── requirements.txt
 ├── .example.env
@@ -43,18 +44,20 @@ StatementParser (ABC)
 │   ├── RBCTFSAParser
 │   └── RBCRRSPParser
 ├── WealthSimpleParser           # CSV: header-based detection, all WS account types
-└── WealthSimplePDFParser        # PDF: ShareOwner format, word-position column parsing
+├── WealthSimplePDFParser        # PDF: ShareOwner investment format, word-position column parsing
+└── WealthSimpleChequingPDFParser # PDF: Cash/Chequing format, word-position column parsing
 ```
 
 RBC MasterCard has a unique PDF layout and extends `StatementParser` directly.
 RBC chequing and savings share the same layout via `RBCPersonalParser`. RBC TFSA
 and RRSP share a different investment statement layout via `RBCInvestmentParser`.
-WealthSimple provides both CSV and PDF statements — the CSV parser detects by
-header row and the PDF parser detects by "ORDER EXECUTION ONLY ACCOUNT" header.
-Both extract the account number from the file and look up a human-readable
-source label via `WS_ACCOUNT_<AccountNo>` env vars (see `.example.env`),
-producing names like `WS Cash-XXXXXXXXXXXX`. Unmapped accounts fall back
-to `WS <AccountNo>`.
+WealthSimple provides CSV and two PDF formats. The CSV parser detects by header
+row. The investment PDF parser detects by "ORDER EXECUTION ONLY ACCOUNT" header.
+The chequing PDF parser detects by "Chequing monthly statement" or "Cash monthly
+statement" header. All three extract the account ID from the filename and look up
+a human-readable source label via `WS_ACCOUNT_<AccountNo>` env vars (see
+`.example.env`), producing names like `WS Chequing-XXXXXXXXXXXX`. Unmapped
+accounts fall back to `WS <AccountNo>`.
 
 ## Setup
 
