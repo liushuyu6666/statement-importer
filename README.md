@@ -119,7 +119,8 @@ Database: `personal_finance`
 | RBC Chequing / Savings        | `withdrawal`, `deposit`                                           |
 | BMO Chequing                  | `withdrawal`, `deposit`                                           |
 | RBC TFSA / RRSP               | `contribution`, `investment switch`, `income reinvested`, `return of capital` |
-| WealthSimple (CSV and PDF)    | Transaction codes lowercased: `buy`, `sell`, `cont`, `wd`, `div`, `dep`, `fee`, `int`, `trfin`, `trfout`, etc. (full list on page 3 of each WS PDF) |
+| WealthSimple CSV / Investment PDF | Transaction codes lowercased: `buy`, `sell`, `cont`, `wd`, `div`, `dep`, `fee`, `int`, `trfin`, `trfout`, etc. (full list on page 3 of each WS PDF) |
+| WealthSimple Chequing PDF     | `withdrawal`, `deposit`                                           |
 
 ### `file_status` collection
 

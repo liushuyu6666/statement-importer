@@ -5,6 +5,7 @@ from .rbc_rrsp import RBCRRSPParser
 from .rbc_savings import RBCSavingsParser
 from .rbc_tfsa import RBCTFSAParser
 from .ws import WealthSimpleParser
+from .ws_chequing_pdf import WealthSimpleChequingPDFParser
 from .ws_pdf import WealthSimplePDFParser
 
 PDF_PARSERS = [
@@ -47,7 +48,19 @@ def _detect_pdf_parser(pdf_path: str, cardholder_name: str):
                 )
             return parser_cls()
 
-    # WealthSimple PDF needs dynamic account type (like the CSV parser)
+    # WealthSimple Chequing PDF (must check before investment PDF)
+    if WealthSimpleChequingPDFParser.matches(first_page_text):
+        errors = WealthSimpleChequingPDFParser.validate(full_text, cardholder_name)
+        if errors:
+            raise ValueError(
+                f"PDF matched WealthSimple Chequing but failed validation:\n"
+                + "\n".join(f"  - {e}" for e in errors)
+            )
+        account_id = WealthSimpleChequingPDFParser.extract_account_id(pdf_path)
+        pdf_account_no = WealthSimpleChequingPDFParser.extract_pdf_account_no(first_page_text)
+        return WealthSimpleChequingPDFParser(account_id, pdf_account_no)
+
+    # WealthSimple Investment PDF
     if WealthSimplePDFParser.matches(first_page_text):
         errors = WealthSimplePDFParser.validate(full_text, cardholder_name)
         if errors:
