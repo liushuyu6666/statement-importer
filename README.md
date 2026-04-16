@@ -1,10 +1,8 @@
-# Bank Statement Importer
-
 Extracts transactions from bank statement PDFs and CSVs and imports them into MongoDB.
 
 Supports multiple bank/card formats via auto-detection — just drop your statements into `statements/` and run.
 
-## Project Structure
+# Project Structure
 
 ```
 statement-importer/
@@ -31,7 +29,7 @@ statement-importer/
 └── .venv/
 ```
 
-### Parser hierarchy
+## Parser hierarchy
 
 ```
 StatementParser (ABC)
@@ -59,7 +57,7 @@ a human-readable source label via `WS_ACCOUNT_<AccountNo>` env vars (see
 `.example.env`), producing names like `WS Chequing-XXXXXXXXXXXX`. Unmapped
 accounts fall back to `WS <AccountNo>`.
 
-## Setup
+# Setup
 
 ```bash
 python3 -m venv .venv
@@ -85,7 +83,7 @@ WS_ACCOUNT_YYYYYYYYYYYY=Cash
 
 Requires MongoDB running locally on the default port (27017).
 
-## Usage
+# Usage
 
 ```bash
 # Import all statements in the folder
@@ -98,11 +96,11 @@ python main.py statements/some-statement.csv
 
 Duplicate statements are skipped automatically via statement-level dedup on `(account, period)` in the `file_status` collection, so it's safe to re-run or import overlapping statements. Empty files (0 bytes) are skipped with status `"skipped"`.
 
-## MongoDB Schema
+# MongoDB Schema
 
 Database: `personal_finance`
 
-### `transactions` collection
+## `transactions` collection
 
 | Field             | Type     | Example                              |
 |-------------------|----------|--------------------------------------|
@@ -114,18 +112,64 @@ Database: `personal_finance`
 | `note`            | String   | Additional details (may be empty)    |
 | `createdAt`       | Date     | `2026-04-14T21:50:34.506Z`          |
 
-#### `type` values by parser
+### `type` values by account
 
-| Parser                        | Possible values                                                   |
-|-------------------------------|-------------------------------------------------------------------|
-| RBC MasterCard                | `purchase`, `payment`                                             |
-| RBC Chequing / Savings        | `deposit`, `withdrawal`                                           |
-| BMO Chequing                  | `deposit`, `withdrawal`                                           |
-| RBC TFSA / RRSP               | `contribution`, `incomereinvested`, `investmentswitch`, `returnofcapital` |
-| WealthSimple CSV / Investment PDF | `buy`, `sell`, `cont`, `wd`, `div`, `dep`, `nrt`, `roc`, `cashback`, `stkreorg`, `trfin`, `trfout`, `trfintf`, etc. |
-| WealthSimple Chequing PDF     | `deposit`, `withdrawal`                                           |
+#### RBC MasterCard
 
-### `file_status` collection
+| Type       | Meaning                          |
+|------------|----------------------------------|
+| `purchase` | Credit card purchase             |
+| `payment`  | Payment toward the card balance  |
+
+#### RBC Chequing / Savings
+
+| Type         | Meaning                              |
+|--------------|--------------------------------------|
+| `deposit`    | Incoming funds (payroll, transfer)   |
+| `withdrawal` | Outgoing funds (bill pay, transfer)  |
+
+#### BMO Chequing
+
+| Type         | Meaning                              |
+|--------------|--------------------------------------|
+| `deposit`    | Incoming funds (payroll, transfer)   |
+| `withdrawal` | Outgoing funds (bill pay, transfer)  |
+
+#### RBC TFSA / RRSP
+
+| Type               | Meaning                                              |
+|--------------------|------------------------------------------------------|
+| `contribution`     | Cash deposited into the registered account           |
+| `incomereinvested` | Dividend or interest automatically reinvested        |
+| `investmentswitch` | Funds moved between investment options within the account |
+| `returnofcapital`  | Non-taxable return of capital distribution           |
+
+#### WealthSimple CSV / Investment PDF
+
+| Type       | Meaning                                              |
+|------------|------------------------------------------------------|
+| `buy`      | Stock or ETF purchase                                |
+| `sell`     | Stock or ETF sale                                    |
+| `cont`     | Contribution — cash deposited into the account       |
+| `wd`       | Withdrawal — cash removed from the account           |
+| `dep`      | Deposit                                              |
+| `div`      | Dividend distribution                                |
+| `nrt`      | Non-resident tax withholding                         |
+| `roc`      | Return of capital distribution                       |
+| `cashback` | Cash-back reward                                     |
+| `stkreorg` | Stock reorganization (split, merger, restructuring)  |
+| `trfin`    | Transfer in from another account                     |
+| `trfout`   | Transfer out to another account                      |
+| `trfintf`  | Internal transfer between sub-accounts               |
+
+#### WealthSimple Chequing PDF
+
+| Type         | Meaning                                          |
+|--------------|--------------------------------------------------|
+| `deposit`    | Incoming funds                                   |
+| `withdrawal` | Outgoing funds (purchases, transfers)            |
+
+## `file_status` collection
 
 Tracks processing status per statement for dedup. Unique index on `(account, period)`.
 
@@ -138,7 +182,7 @@ Tracks processing status per statement for dedup. Unique index on `(account, per
 | `processedAt` | Date     | `2026-04-14T21:50:34.506Z`          |
 | `error`       | String   | Error message (only when failed/skipped) |
 
-## Validation
+# Validation
 
 Each file is validated before parsing:
 
@@ -149,7 +193,7 @@ Each file is validated before parsing:
 
 Unrecognized or invalid files are skipped with a message.
 
-## Adding a New Parser
+# Adding a New Parser
 
 For a completely new PDF statement format:
 
