@@ -60,8 +60,7 @@ class RBCMasterCardParser(StatementParser):
     def parse(self, pdf_path: str) -> list[dict]:
         transactions = []
         with pdfplumber.open(pdf_path) as pdf:
-            _, end_date = self._extract_period(pdf)
-            year = end_date.year
+            start_date, end_date = self._extract_period(pdf)
             for page in pdf.pages:
                 text = page.extract_text()
                 if not text:
@@ -71,7 +70,7 @@ class RBCMasterCardParser(StatementParser):
                     if m:
                         amount = self._parse_amount(m.group(3))
                         transactions.append({
-                            "transactionDate": self._parse_date(m.group(1), year),
+                            "transactionDate": self._parse_date(m.group(1), start_date, end_date),
                             "merchant": m.group(2).strip(),
                             "amount": amount,
                             "account": self.ACCOUNT,
@@ -105,10 +104,22 @@ class RBCMasterCardParser(StatementParser):
         return start_date, end_date
 
     @staticmethod
-    def _parse_date(date_str: str, year: int) -> datetime:
-        """Parse dates like 'JAN 10' or 'JAN10' (missing space)."""
+    def _parse_date(date_str: str, start_date: datetime, end_date: datetime) -> datetime:
+        """Parse dates like 'JAN 10' or 'JAN10' (missing space).
+
+        Statements can span a year boundary (e.g. Dec 11 2025 to Jan 12 2026).
+        Pick the year by which end of the period the transaction month matches,
+        since some PDFs list transactions a day or two outside the declared
+        period — so a strict in-range check isn't reliable.
+        """
         cleaned = date_str.replace(" ", "")
-        return datetime.strptime(f"{cleaned[:3]} {cleaned[3:]} {year}", "%b %d %Y")
+        day_month = f"{cleaned[:3]} {cleaned[3:]}"
+        probe = datetime.strptime(f"{day_month} 2000", "%b %d %Y")
+        if probe.month == start_date.month:
+            year = start_date.year
+        else:
+            year = end_date.year
+        return datetime.strptime(f"{day_month} {year}", "%b %d %Y")
 
     @staticmethod
     def _parse_amount(s: str) -> float:
