@@ -91,7 +91,8 @@ class RBCPersonalParser(StatementParser):
                 transactions.extend(
                     self._parse_page(page, col_bounds, start_date, end_date)
                 )
-        return transactions
+        period = f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}"
+        return self._attach_source(transactions, pdf_path, period)
 
     @staticmethod
     def _find_columns(page):

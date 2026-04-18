@@ -1,10 +1,20 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 
 class StatementParser(ABC):
     """Base class for bank statement parsers."""
 
     ACCOUNT: str  # e.g. "RBC MasterCard"
+
+    @staticmethod
+    def _attach_source(transactions: list[dict], file_path: str, period: str) -> list[dict]:
+        """Stamp each transaction with its source fileName and period."""
+        file_name = Path(file_path).name
+        for t in transactions:
+            t["fileName"] = file_name
+            t["period"] = period
+        return transactions
 
     @staticmethod
     @abstractmethod
@@ -36,4 +46,9 @@ class StatementParser(ABC):
             merchant: str
             amount: float
             account: str
+            fileName: str    # basename of the source file
+            period: str      # matches the value returned by get_period()
+
+        Implementations should call self._attach_source(...) before
+        returning to populate fileName and period uniformly.
         """

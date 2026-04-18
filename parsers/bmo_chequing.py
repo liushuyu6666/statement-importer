@@ -82,7 +82,8 @@ class BMOChequingParser(StatementParser):
                 transactions.extend(
                     self._parse_page(page, col_bounds, end_date)
                 )
-        return transactions
+        period = f"ending {end_date.strftime('%Y-%m-%d')}"
+        return self._attach_source(transactions, pdf_path, period)
 
     @staticmethod
     def _extract_end_date(pdf) -> datetime:

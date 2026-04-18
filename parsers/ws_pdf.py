@@ -93,7 +93,7 @@ class WealthSimplePDFParser(StatementParser):
                 if not cols:
                     continue
                 transactions.extend(self._parse_page(page, cols))
-        return transactions
+        return self._attach_source(transactions, file_path, self.get_period(file_path))
 
     @staticmethod
     def _find_columns(page):

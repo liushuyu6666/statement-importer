@@ -92,7 +92,11 @@ class RBCInvestmentParser(StatementParser):
     def get_period(self, pdf_path: str) -> str:
         with pdfplumber.open(pdf_path) as pdf:
             text = pdf.pages[0].extract_text() or ""
-        m = _PERIOD_RE.search(text)
+        return self._format_period(text)
+
+    @staticmethod
+    def _format_period(page_text: str) -> str:
+        m = _PERIOD_RE.search(page_text)
         if not m:
             raise ValueError("Could not find statement period in PDF")
         start = datetime.strptime(
@@ -109,6 +113,7 @@ class RBCInvestmentParser(StatementParser):
         in_activity = False
 
         with pdfplumber.open(pdf_path) as pdf:
+            period = self._format_period(pdf.pages[0].extract_text() or "")
             for page in pdf.pages:
                 text = page.extract_text()
                 if not text:
@@ -145,7 +150,7 @@ class RBCInvestmentParser(StatementParser):
                             "note": "",
                         })
 
-        return transactions
+        return self._attach_source(transactions, pdf_path, period)
 
     @staticmethod
     def _parse_date(date_str: str) -> datetime:

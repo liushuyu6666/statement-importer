@@ -7,6 +7,7 @@ Supports multiple bank/card formats via auto-detection — just drop your statem
 ```
 statement-importer/
 ├── main.py                # Entry point — scans files, detects format, imports to MongoDB
+├── preprocessor.py        # StatementPreprocessor — flattens PDFs out of any zip archives in the folder before parsing
 ├── parsers/
 │   ├── __init__.py        # Auto-detection registry
 │   ├── base.py            # StatementParser ABC
@@ -94,6 +95,8 @@ python main.py statements/some-statement.pdf
 python main.py statements/some-statement.csv
 ```
 
+Any `.zip` archive in the folder is automatically expanded first: PDFs inside are extracted flat into the same folder (nested folders are discarded), then the importer runs against the extracted PDFs.
+
 Duplicate statements are skipped automatically via statement-level dedup on `(account, period)` in the `file_status` collection, so it's safe to re-run or import overlapping statements. Empty files (0 bytes) are skipped with status `"skipped"`.
 
 # MongoDB Schema
@@ -110,6 +113,8 @@ Database: `personal_finance`
 | `account`         | String   | `RBC MasterCard`, `BMO Chequing`, `WS Cash-XXXXXXXXXXXX` |
 | `type`            | String   | `purchase`, `deposit`, `buy`, `cont` |
 | `note`            | String   | Additional details (may be empty)    |
+| `fileName`        | String   | `eStatement_2026-03-10.pdf` — basename of the source file |
+| `period`          | String   | `2026-02-11 to 2026-03-10` — same value as in `file_status` |
 | `createdAt`       | Date     | `2026-04-14T21:50:34.506Z`          |
 
 ### `type` values by account

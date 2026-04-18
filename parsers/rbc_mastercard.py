@@ -77,7 +77,8 @@ class RBCMasterCardParser(StatementParser):
                             "type": "payment" if amount > 0 else "purchase",
                             "note": "",
                         })
-        return transactions
+        period = f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}"
+        return self._attach_source(transactions, pdf_path, period)
 
     @staticmethod
     def _extract_period(pdf) -> tuple[datetime, datetime]:

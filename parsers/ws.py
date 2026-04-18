@@ -85,7 +85,7 @@ class WealthSimpleParser(StatementParser):
                     "type": row["transaction"].lower(),
                     "note": note,
                 })
-        return transactions
+        return self._attach_source(transactions, file_path, self.get_period(file_path))
 
     @staticmethod
     def _split_description(desc: str) -> tuple[str, str]:
