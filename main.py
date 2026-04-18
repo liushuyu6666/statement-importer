@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 
 from parsers import detect_parser
+from preprocessor import StatementPreprocessor
 
 load_dotenv()
 
@@ -110,6 +111,10 @@ def main():
         sys.exit(1)
 
     target = Path(sys.argv[1])
+    if target.is_dir():
+        extracted = StatementPreprocessor.extract_zips(target)
+        if extracted:
+            print(f"Extracted {extracted} PDF(s) from zip archive(s) in {target}")
     statements = collect_statements(target)
     if not statements:
         print(f"No statement files found at: {target}")
